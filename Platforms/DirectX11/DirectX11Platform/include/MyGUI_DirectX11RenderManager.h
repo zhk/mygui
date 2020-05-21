@@ -84,34 +84,39 @@ namespace MyGUI
 			return mInfo;
 		}
 
+		/** @see RenderManager::setViewSize */
+		void setViewSize(int _width, int _height) override;
+
 		/*internal:*/
 		void drawOneFrame();
-		void setViewSize(int _width, int _height);
 
 	private:
 		void destroyAllResources();
 
 	public:
-		ID3D11Device*            mpD3DDevice;
-		ID3D11DeviceContext*     mpD3DContext;
-		ID3D11VertexShader*      mVertexShader0, *mVertexShader1;
-		ID3D11PixelShader*       mPixelShader0, *mPixelShader1;
-		ID3D11SamplerState*      mSamplerState;
-		ID3D11BlendState*        mBlendState;
-		ID3D11RasterizerState*   mRasterizerState;
+		ID3D11Device* mpD3DDevice;
+		ID3D11DeviceContext* mpD3DContext;
+		ID3D11VertexShader* mVertexShader0;
+		ID3D11VertexShader* mVertexShader1;
+		ID3D11PixelShader* mPixelShader0;
+		ID3D11PixelShader* mPixelShader1;
+		ID3D11SamplerState* mSamplerState;
+		ID3D11BlendState* mBlendState;
+		ID3D11RasterizerState* mRasterizerState;
 		ID3D11DepthStencilState* mDepthStencilState;
-		ID3D11InputLayout*       mInputLayout0, *mInputLayout1;
+		ID3D11InputLayout* mInputLayout0;
+		ID3D11InputLayout* mInputLayout1;
 
 	private:
-		IntSize                  mViewSize;
-		VertexColourType         mVertexFormat;
-		RenderTargetInfo         mInfo;
-		bool                     mUpdate;
+		IntSize mViewSize;
+		VertexColourType mVertexFormat;
+		RenderTargetInfo mInfo;
+		bool mUpdate;
 
 		typedef std::map<std::string, ITexture*> MapTexture;
 
-		MapTexture           mTextures;
-		bool                 mIsInitialise;
+		MapTexture mTextures;
+		bool mIsInitialise;
 	};
 
 } // namespace MyGUI

@@ -11,7 +11,6 @@ else(WIN32)
 endif(WIN32)
 
 set(INST_FILES
-  Packages/FindOIS.cmake
   Packages/FindOGRE.cmake
   Utils/FindPkgMacros.cmake
   Utils/PreprocessorUtils.cmake
@@ -22,7 +21,6 @@ set(INST_FILES
 set(STATIC_INST_FILES
   Packages/FindDirectX.cmake
   Packages/FindDirectX11.cmake
-  Packages/FindFreetype.cmake
 )
 if (APPLE)
   set(INST_FILES ${INST_FILES}

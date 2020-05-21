@@ -15,7 +15,7 @@
 #include "MyGUI_ISubWidgetText.h"
 #include "MyGUI_ScrollBar.h"
 
-#include <ctype.h>
+#include <cctype>
 
 namespace MyGUI
 {
@@ -289,6 +289,10 @@ namespace MyGUI
 		Base::onKeyLostFocus(_new);
 	}
 
+	bool isWhitespace(const UString::code_point& c) {
+		return c == ' ' || c == '\t';
+	}
+
 	void EditBox::onKeyButtonPressed(KeyCode _key, Char _char)
 	{
 		if (mClientText == nullptr || getClientWidget() == nullptr)
@@ -410,7 +414,29 @@ namespace MyGUI
 		{
 			if ((mCursorPosition) < mTextLength)
 			{
-				mCursorPosition ++;
+				if (input.isControlPressed())
+				{
+					if (mModePassword)
+					{
+						mCursorPosition = mTextLength;
+					}
+					else
+					{
+						const UString& text = getRealString();
+						while (mCursorPosition < mTextLength && isWhitespace(text[mCursorPosition]))
+						{
+							mCursorPosition ++;
+						}
+						while (mCursorPosition < mTextLength && !isWhitespace(text[mCursorPosition]))
+						{
+							mCursorPosition ++;
+						}
+					}
+				}
+				else
+				{
+					mCursorPosition ++;
+				}
 				mClientText->setCursorPosition(mCursorPosition);
 				updateSelectText();
 			}
@@ -425,7 +451,29 @@ namespace MyGUI
 		{
 			if (mCursorPosition != 0)
 			{
-				mCursorPosition --;
+				if (input.isControlPressed())
+				{
+					if (mModePassword)
+					{
+						mCursorPosition = 0;
+					}
+					else
+					{
+						const UString& text = getRealString();
+						while (mCursorPosition > 0 && isWhitespace(text[mCursorPosition - 1]))
+						{
+							mCursorPosition --;
+						}
+						while (mCursorPosition > 0 && !isWhitespace(text[mCursorPosition - 1]))
+						{
+							mCursorPosition --;
+						}
+					}
+				}
+				else
+				{
+					mCursorPosition --;
+				}
 				mClientText->setCursorPosition(mCursorPosition);
 				updateSelectText();
 			}
@@ -1719,6 +1767,11 @@ namespace MyGUI
 		eraseView();
 	}
 
+	int EditBox::getFontHeight()
+	{
+		return (nullptr == mClientText) ? 0 : mClientText->getFontHeight();
+	}
+
 	void EditBox::updateView()
 	{
 		updateScrollSize();
@@ -2171,21 +2224,6 @@ namespace MyGUI
 	bool EditBox::getTabPrinting() const
 	{
 		return mTabPrinting;
-	}
-
-	void EditBox::setPosition(int _left, int _top)
-	{
-		setPosition(IntPoint(_left, _top));
-	}
-
-	void EditBox::setSize(int _width, int _height)
-	{
-		setSize(IntSize(_width, _height));
-	}
-
-	void EditBox::setCoord(int _left, int _top, int _width, int _height)
-	{
-		setCoord(IntCoord(_left, _top, _width, _height));
 	}
 
 	bool EditBox::isVisibleVScroll() const

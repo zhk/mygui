@@ -9,33 +9,32 @@
 #include <GLES3/gl2ext.h>
 #include "platform.h"
 
-const char* vShader = " \n\
-\n\
-attribute vec3 a_position;                             \n\
-attribute vec4 a_color;                                \n\
-attribute vec2 a_texCoord;                             \n\
-uniform        mat4 u_MVPMatrix;                       \n\
-\n\
-varying lowp vec4 v_fragmentColor;                     \n\
-varying mediump vec2 v_texCoord;                       \n\
-\n\
-void main()                                            \n\
-{                                                      \n\
-gl_Position = (vec4(a_position,1));                    \n\
-v_fragmentColor = a_color;                             \n\
-v_texCoord = a_texCoord;                               \n\
-}                                                      \n\
-";
+const char* vShader = R"(
+	attribute vec3 a_position;
+	attribute vec4 a_color;
+	attribute vec2 a_texCoord;
+	uniform mat4 u_MVPMatrix;
 
-const char* fShader = " \n\
-precision lowp float;                                  \n\
-varying vec4 v_fragmentColor;                          \n\
-varying vec2 v_texCoord;                               \n\
-uniform sampler2D u_texture;                           \n\
-void main(void) {                                      \n\
-    gl_FragColor = texture2D(u_texture, v_texCoord).zyxw * v_fragmentColor;   \n\
-}                                                      \n\
-";
+	varying lowp vec4 v_fragmentColor;
+	varying mediump vec2 v_texCoord;
+
+	void main()
+	{
+		gl_Position = (vec4(a_position,1));
+		v_fragmentColor = a_color;
+		v_texCoord = a_texCoord;
+	}
+	)";
+
+const char* fShader = R"(
+	precision lowp float;
+	varying vec4 v_fragmentColor;
+	varying vec2 v_texCoord;
+	uniform sampler2D u_texture;
+	void main(void) {
+		gl_FragColor = texture2D(u_texture, v_texCoord).zyxw * v_fragmentColor;
+	}
+	)";
 
 namespace MyGUI
 {
@@ -90,7 +89,7 @@ namespace MyGUI
 	GLuint OpenGLESRenderManager::BuildShader(const char* source, GLenum shaderType) const
 	{
 		GLuint shaderHandle = glCreateShader(shaderType);
-		glShaderSource(shaderHandle, 1, &source, 0);
+		glShaderSource(shaderHandle, 1, &source, nullptr);
 		glCompileShader(shaderHandle);
 		CHECK_GL_ERROR_DEBUG();
 
@@ -100,7 +99,7 @@ namespace MyGUI
 		if (compileSuccess == GL_FALSE)
 		{
 			GLchar messages[256];
-			glGetShaderInfoLog(shaderHandle, sizeof(messages), 0, &messages[0]);
+			glGetShaderInfoLog(shaderHandle, sizeof(messages), nullptr, &messages[0]);
 			MYGUI_PLATFORM_EXCEPT(messages);
 		}
 
@@ -123,7 +122,7 @@ namespace MyGUI
 		if (linkSuccess == GL_FALSE)
 		{
 			GLchar messages[256];
-			glGetProgramInfoLog(programHandle, sizeof(messages), 0, &messages[0]);
+			glGetProgramInfoLog(programHandle, sizeof(messages), nullptr, &messages[0]);
 			MYGUI_PLATFORM_EXCEPT(messages);
 		}
 
@@ -156,25 +155,23 @@ namespace MyGUI
 
 		GLuint textureUniform = glGetUniformLocation(mProgram, "u_texture");
 
-
 		glEnableVertexAttribArray(positionSlot);
 		glEnableVertexAttribArray(colorSlot);
 		glEnableVertexAttribArray(texSlot);
 
 		glUseProgram(mProgram);
 
-
 		size_t offset = 0;
 		int diff = offsetof(Vertex, x);
-		glVertexAttribPointer(positionSlot, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) (offset + diff));
+		glVertexAttribPointer(positionSlot, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(offset + diff));
 		CHECK_GL_ERROR_DEBUG();
 
 		diff = offsetof(Vertex, colour);
-		glVertexAttribPointer(colorSlot, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex), (void*) (offset + diff));
+		glVertexAttribPointer(colorSlot, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex), (void*)(offset + diff));
 		CHECK_GL_ERROR_DEBUG();
 
 		diff = offsetof(Vertex, u);
-		glVertexAttribPointer(texSlot, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) (offset + diff));
+		glVertexAttribPointer(texSlot, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(offset + diff));
 		CHECK_GL_ERROR_DEBUG();
 
 		glUniform1i(textureUniform, 0);
@@ -234,7 +231,7 @@ namespace MyGUI
 		unsigned long now_time = timer.getMilliseconds();
 		unsigned long time = now_time - last_time;
 
-		onFrameEvent((float) ((double) (time) / (double) 1000));
+		onFrameEvent((float)((double)(time) / 1000.0));
 
 		last_time = now_time;
 

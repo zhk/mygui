@@ -4,7 +4,9 @@
 	@date		09/2011
 */
 
+#pragma warning(push, 0)
 #include <d3dx11.h>
+#pragma warning(pop)
 #include "MyGUI_DirectX11Texture.h"
 #include "MyGUI_DirectX11DataManager.h"
 #include "MyGUI_DirectX11RenderManager.h"
@@ -14,7 +16,7 @@
 namespace MyGUI
 {
 
-	DirectX11RTTexture::DirectX11RTTexture( DirectX11Texture* _texture, DirectX11RenderManager* _manager ) :
+	DirectX11RTTexture::DirectX11RTTexture(DirectX11Texture* _texture, DirectX11RenderManager* _manager) :
 		mOldDepthStencil(nullptr),
 		mOldRenderTarget(nullptr),
 		mTexture(_texture),
@@ -59,7 +61,7 @@ namespace MyGUI
 		vp.MaxDepth = 1.0f;
 		vp.TopLeftX = 0.0f;
 		vp.TopLeftY = 0.0f;
-		mManager->mpD3DContext->RSSetViewports( 1, &vp );
+		mManager->mpD3DContext->RSSetViewports(1, &vp);
 
 		const float clearColor[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 		mManager->mpD3DContext->OMSetRenderTargets(1, &mRenderTarget, 0);

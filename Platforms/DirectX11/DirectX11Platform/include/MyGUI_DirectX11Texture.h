@@ -11,8 +11,10 @@
 #include "MyGUI_ITexture.h"
 #include "MyGUI_RenderFormat.h"
 #include "MyGUI_Types.h"
+#include "MyGUI_DirectX11Diagnostic.h"
 
-struct IDirect3DTexture9;
+struct ID3D11Texture2D;
+struct ID3D11ShaderResourceView;
 
 namespace MyGUI
 {
@@ -29,7 +31,10 @@ namespace MyGUI
 
 		virtual void createManual(int _width, int _height, TextureUsage _usage, PixelFormat _format);
 		virtual void loadFromFile(const std::string& _filename);
-		virtual void saveToFile(const std::string& _filename) { }
+		virtual void saveToFile(const std::string& _filename)
+		{
+			MYGUI_PLATFORM_LOG(Warning, "saveToFile not implemented (was trying to save '" << _filename << "')");
+		}
 
 		virtual void destroy();
 
@@ -40,29 +45,30 @@ namespace MyGUI
 		virtual int getWidth();
 		virtual int getHeight();
 
-		virtual PixelFormat  getFormat();
+		virtual PixelFormat getFormat();
 		virtual TextureUsage getUsage();
-		virtual size_t       getNumElemBytes();
+		virtual size_t getNumElemBytes();
 
 		virtual IRenderTarget* getRenderTarget();
 
 	private:
 		friend class DirectX11RTTexture;
-		ID3D11Texture2D*          mTexture;
-		void*                     mWriteData;
+
+		ID3D11Texture2D* mTexture;
+		void* mWriteData;
 
 	public:
 		ID3D11ShaderResourceView* mResourceView;
 
 	private:
-		int                       mWidth;
-		int                       mHeight;
-		TextureUsage              mTextureUsage;
-		size_t                    mNumElemBytes;
-		std::string               mName;
-		bool                      mLock;
-		DirectX11RTTexture*       mRenderTarget;
-		DirectX11RenderManager*   mManager;
+		int mWidth;
+		int mHeight;
+		TextureUsage mTextureUsage;
+		size_t mNumElemBytes;
+		std::string mName;
+		bool mLock;
+		DirectX11RTTexture* mRenderTarget;
+		DirectX11RenderManager* mManager;
 	};
 
 } // namespace MyGUI

@@ -17,7 +17,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <assert.h>
+#include <cassert>
 
 namespace MyGUI
 {
@@ -83,7 +83,7 @@ namespace MyGUI
 				static const char* values[MAX + 1] =
 				{
 					"Failed to open XML file",
-					"Failed to ceate XML file",
+					"Failed to create XML file",
 					"XML file contain incorrect content",
 					"XML file contain not closed elements",
 					"XML file without declaration",
@@ -103,10 +103,10 @@ namespace MyGUI
 		class Element;
 		class Document;
 
-		typedef Element* ElementPtr;
+		using ElementPtr = Element*;
 		typedef std::pair<std::string, std::string> PairAttribute;
-		typedef std::vector<PairAttribute> VectorAttributes;
-		typedef std::vector<ElementPtr> VectorElement;
+		using VectorAttributes = std::vector<PairAttribute>;
+		using VectorElement = std::vector<ElementPtr>;
 
 		//----------------------------------------------------------------------//
 		// class ElementEnumerator

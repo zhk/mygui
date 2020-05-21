@@ -38,19 +38,23 @@ if (MYGUI_USE_FREETYPE)
 	# Find FreeType
 	find_package(Freetype)
 	macro_log_feature(FREETYPE_FOUND "freetype" "Portable font engine" "http://www.freetype.org" TRUE "" "")
+	find_package(ZLIB)
 endif()
 
 #######################################################################
 # RenderSystem dependencies
 #######################################################################
 
+find_package(SDL2)
 if(MYGUI_RENDERSYSTEM EQUAL 3)
 	# Find OGRE
 	find_package(OGRE_Old)
 	macro_log_feature(OGRE_FOUND "ogre" "Support for the Ogre render system" "" TRUE "" "")
 elseif(MYGUI_RENDERSYSTEM EQUAL 4 OR MYGUI_RENDERSYSTEM EQUAL 7 OR MYGUI_RENDERSYSTEM EQUAL 8)
-	find_package(SDL2)
 	find_package(SDL2_image)
+	if(POLICY CMP0072)
+		cmake_policy(SET CMP0072 OLD)
+	endif()
 	find_package(OpenGL)
 	macro_log_feature(OPENGL_FOUND "opengl" "Support for the OpenGL render system" "" TRUE "" "")
 	if(MYGUI_USE_SYSTEM_GLEW)
@@ -74,19 +78,6 @@ endif()
 
 #######################################################################
 # Demos and tools optional dependencies
-#######################################################################
-
-# Find OIS
-if (MYGUI_SAMPLES_INPUT EQUAL 1)
-	find_package(OIS)
-	macro_log_feature(OIS_FOUND "OIS" "Input library needed for the samples" "http://sourceforge.net/projects/wgois" FALSE "" "")
-elseif (MYGUI_SAMPLES_INPUT EQUAL 3)
-	find_package(OIS)
-	macro_log_feature(OIS_FOUND "OIS" "Input library needed for the samples" "http://sourceforge.net/projects/wgois" FALSE "" "")
-endif()
-
-#######################################################################
-# Tools
 #######################################################################
 
 find_package(Doxygen)

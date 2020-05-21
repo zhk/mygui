@@ -11,11 +11,7 @@
 #include "MyGUI_Prerequest.h"
 #include "MyGUI_IResource.h"
 
-#ifdef EMSCRIPTEN
 #include <SDL2/SDL.h>
-#else
-#include <SDL.h>
-#endif
 
 namespace input
 {
@@ -23,13 +19,12 @@ namespace input
 	class ResourceSDLPointer :
 		public MyGUI::IResource
 	{
-		MYGUI_RTTI_DERIVED( ResourceSDLPointer );
+		MYGUI_RTTI_DERIVED( ResourceSDLPointer )
 
 	public:
 		ResourceSDLPointer();
-		virtual ~ResourceSDLPointer() { }
 
-		virtual void deserialization(MyGUI::xml::ElementPtr _node, MyGUI::Version _version);
+		void deserialization(MyGUI::xml::ElementPtr _node, MyGUI::Version _version) override;
 
 		SDL_SystemCursor getPointerType()
 		{

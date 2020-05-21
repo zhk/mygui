@@ -12,7 +12,7 @@ namespace demo
 {
 
 #ifdef MYGUI_OGRE_PLATFORM
-	static Ogre::RaySceneQuery* gRaySceneQuery = 0;
+	static Ogre::RaySceneQuery* gRaySceneQuery = nullptr;
 	static float gAngleH = 90;
 	static float gAngleV = -25;
 #endif
@@ -50,13 +50,7 @@ namespace demo
 
 		MyGUI::ResourceManager::getInstance().load("Contexts.xml");
 
-#ifdef MYGUI_SAMPLES_INPUT_OIS
 		MyGUI::ResourceManager::getInstance().load("DemoPointers.xml");
-#elif MYGUI_SAMPLES_INPUT_WIN32
-		MyGUI::ResourceManager::getInstance().load("DemoPointersW32.xml");
-#elif MYGUI_SAMPLES_INPUT_WIN32_OIS
-		MyGUI::ResourceManager::getInstance().load("DemoPointersW32.xml");
-#endif
 
 		mPointerContextManager = new PointerContextManager(this);
 		mPointerContextManager->addContext("ptrx_Normal");

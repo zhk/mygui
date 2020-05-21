@@ -22,7 +22,6 @@ namespace MyGUI
 	class OgreRenderManager :
 		public RenderManager,
 		public IRenderTarget,
-		public Ogre::WindowEventListener,
 		public Ogre::RenderQueueListener,
 		public Ogre::RenderSystem::Listener
 	{
@@ -88,16 +87,29 @@ namespace MyGUI
 
 		size_t getBatchCount() const;
 
+		/** @see RenderManager::setViewSize */
+		void setViewSize(int _width, int _height) override;
+
 #if MYGUI_DEBUG_MODE == 1
 		virtual bool checkTexture(ITexture* _texture);
 #endif
 
+	/*internal:*/
+		/* for use with RTT, flips Y coordinate if necessary when rendering */
+		void doRenderRtt(IVertexBuffer* _buffer, ITexture* _texture, size_t _count, bool flipY);
+
 	private:
-		virtual void renderQueueStarted(Ogre::uint8 queueGroupId, const Ogre::String& invocation, bool& skipThisInvocation);
-		virtual void renderQueueEnded(Ogre::uint8 queueGroupId, const Ogre::String& invocation, bool& repeatThisInvocation);
+		virtual void renderQueueStarted(
+			Ogre::uint8 queueGroupId,
+			const Ogre::String& invocation,
+			bool& skipThisInvocation);
+		virtual void renderQueueEnded(
+			Ogre::uint8 queueGroupId,
+			const Ogre::String& invocation,
+			bool& repeatThisInvocation);
 		virtual void windowResized(Ogre::RenderWindow* _window);
 
-		// восстанавливаем буферы
+		// restore buffers
 		virtual void eventOccurred(const Ogre::String& eventName, const Ogre::NameValuePairList* parameters);
 
 		void destroyAllResources();
@@ -120,7 +132,11 @@ namespace MyGUI
 		unsigned short mActiveViewport;
 
 		Ogre::RenderSystem* mRenderSystem;
+#if OGRE_VERSION >= MYGUI_DEFINE_VERSION(1, 11, 3)
+		Ogre::Sampler::UVWAddressingMode mTextureAddressMode;
+#else
 		Ogre::TextureUnitState::UVWAddressingMode mTextureAddressMode;
+#endif
 		Ogre::LayerBlendModeEx mColorBlendMode, mAlphaBlendMode;
 
 		RenderTargetInfo mInfo;
@@ -132,7 +148,6 @@ namespace MyGUI
 		bool mManualRender;
 		size_t mCountBatch;
 
-		// shaders for OpenGLES2 render
 		Ogre::HighLevelGpuProgramPtr mVertexProgram;
 		Ogre::HighLevelGpuProgramPtr mFragmentProgram;
 	};

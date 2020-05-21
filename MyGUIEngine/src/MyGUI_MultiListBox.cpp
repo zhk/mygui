@@ -252,6 +252,13 @@ namespace MyGUI
 		eventListSelectAccept(this, BiIndexBase::convertToFace(_position));
 	}
 
+	void MultiListBox::notifyListNotifyItem(ListBox * _sender, const MyGUI::IBNotifyItemData & _info)
+	{
+		IBNotifyItemData infoConvertedIndex(_info);
+		infoConvertedIndex.index = BiIndexBase::convertToFace(_info.index);
+		eventNotifyItem(this, infoConvertedIndex);
+	}
+
 	void MultiListBox::notifyListChangeFocus(ListBox* _sender, size_t _position)
 	{
 		for (VectorColumnInfo::iterator iter = mVectorColumnInfo.begin(); iter != mVectorColumnInfo.end(); ++iter)
@@ -376,9 +383,14 @@ namespace MyGUI
 		if (mSortUp)
 			std::swap(_left, _right);
 		if (requestOperatorLess.empty())
+		{
 			result = _list->getItemNameAt(_left) < _list->getItemNameAt(_right);
+		}
 		else
-			requestOperatorLess(this, mSortColumnIndex, _list->getItemNameAt(_left), _list->getItemNameAt(_right), result);
+		{
+			requestOperatorLess.m_eventObsolete(this, mSortColumnIndex, _list->getItemNameAt(_left), _list->getItemNameAt(_right), result);
+			requestOperatorLess.m_event(this, mSortColumnIndex, BiIndexBase::convertToFace(_left), BiIndexBase::convertToFace(_right), result);
+		}
 		return result;
 	}
 
@@ -693,6 +705,7 @@ namespace MyGUI
 		column.list->eventListMouseItemFocus += newDelegate(this, &MultiListBox::notifyListChangeFocus);
 		column.list->eventListChangeScroll += newDelegate(this, &MultiListBox::notifyListChangeScrollPosition);
 		column.list->eventListSelectAccept += newDelegate(this, &MultiListBox::notifyListSelectAccept);
+		column.list->eventNotifyItem += newDelegate(this, &MultiListBox::notifyListNotifyItem);
 
 		if (mHeaderPlace != nullptr)
 			column.button = mHeaderPlace->createWidget<Button>(mSkinButton, IntCoord(), Align::Default);
@@ -812,21 +825,6 @@ namespace MyGUI
 
 		if (getUpdateByResize())
 			updateColumns();
-	}
-
-	void MultiListBox::setPosition(int _left, int _top)
-	{
-		setPosition(IntPoint(_left, _top));
-	}
-
-	void MultiListBox::setSize(int _width, int _height)
-	{
-		setSize(IntSize(_width, _height));
-	}
-
-	void MultiListBox::setCoord(int _left, int _top, int _width, int _height)
-	{
-		setCoord(IntCoord(_left, _top, _width, _height));
 	}
 
 	bool MultiListBox::getUpdateByResize()

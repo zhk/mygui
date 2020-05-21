@@ -8,7 +8,7 @@
 #include "MyGUI_OpenGL3RenderManager.h"
 #include "MyGUI_OpenGL3Diagnostic.h"
 
-#include "GL/glew.h"
+#include <GL/glew.h>
 
 namespace MyGUI
 {
@@ -73,15 +73,15 @@ namespace MyGUI
 
 	void OpenGL3RTTexture::begin()
 	{
-    glGetIntegerv(GL_VIEWPORT, mSavedViewport); // save current viewport
-    
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, mFBOID);
+		glGetIntegerv(GL_VIEWPORT, mSavedViewport); // save current viewport
+
+		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, mFBOID);
 
 		glViewport(0, 0, mWidth, mHeight);
 
 		OpenGL3RenderManager::getInstance().begin();
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  }
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	}
 
 	void OpenGL3RTTexture::end()
 	{
@@ -89,12 +89,12 @@ namespace MyGUI
 
 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0); // unbind
 
-    glViewport(mSavedViewport[0], mSavedViewport[1], mSavedViewport[2], mSavedViewport[3]); // restore old viewport
-  }
+		glViewport(mSavedViewport[0], mSavedViewport[1], mSavedViewport[2], mSavedViewport[3]); // restore old viewport
+	}
 
 	void OpenGL3RTTexture::doRender(IVertexBuffer* _buffer, ITexture* _texture, size_t _count)
 	{
-		OpenGL3RenderManager::getInstance().doRenderRTT(_buffer, _texture, _count);
+		OpenGL3RenderManager::getInstance().doRenderRtt(_buffer, _texture, _count);
 	}
 
 } // namespace MyGUI

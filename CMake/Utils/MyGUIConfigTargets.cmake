@@ -24,36 +24,54 @@ elseif (UNIX)
 endif ()
 if (APPLE)
   if (NOT CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    set(MYGUI_FRAMEWORK_PATH ${CMAKE_INSTALL_PREFIX}/lib/${CMAKE_BUILD_TYPE})
+    set(MYGUI_FRAMEWORK_PATH ${CMAKE_INSTALL_LIBDIR}/${CMAKE_BUILD_TYPE})
   else ()
     set(MYGUI_FRAMEWORK_PATH /Library/Frameworks)
   endif ()
 endif ()
 
+function(mygui_set_platform_name PLATFORM_ID)
+	if(${PLATFORM_ID} EQUAL 1)
+		set(MYGUI_PLATFORM_NAME Dummy PARENT_SCOPE)
+	elseif(${PLATFORM_ID} EQUAL 3)
+		set(MYGUI_PLATFORM_NAME Ogre PARENT_SCOPE)
+	elseif(${PLATFORM_ID} EQUAL 4)
+		set(MYGUI_PLATFORM_NAME OpenGL PARENT_SCOPE)
+	elseif(${PLATFORM_ID} EQUAL 5)
+		set(MYGUI_PLATFORM_NAME DirectX PARENT_SCOPE)
+	elseif(${PLATFORM_ID} EQUAL 6)
+		set(MYGUI_PLATFORM_NAME DirectX11 PARENT_SCOPE)
+	elseif(${PLATFORM_ID} EQUAL 7)
+		set(MYGUI_PLATFORM_NAME OpenGL3 PARENT_SCOPE)
+	elseif(${PLATFORM_ID} EQUAL 8)
+		set(MYGUI_PLATFORM_NAME OpenGLES PARENT_SCOPE)
+	endif()
+endfunction(mygui_set_platform_name)
+
 # install targets according to current build type
 function(mygui_install_target TARGETNAME SUFFIX)
 	install(TARGETS ${TARGETNAME}
-		RUNTIME DESTINATION "bin${MYGUI_RELEASE_PATH}" CONFIGURATIONS Release None ""
-		LIBRARY DESTINATION "lib${MYGUI_LIB_RELEASE_PATH}${SUFFIX}" CONFIGURATIONS Release None ""
-		ARCHIVE DESTINATION "lib${MYGUI_LIB_RELEASE_PATH}${SUFFIX}" CONFIGURATIONS Release None ""
+		RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}${MYGUI_RELEASE_PATH}" CONFIGURATIONS Release None ""
+		LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}${MYGUI_LIB_RELEASE_PATH}${SUFFIX}" CONFIGURATIONS Release None ""
+		ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}${MYGUI_LIB_RELEASE_PATH}${SUFFIX}" CONFIGURATIONS Release None ""
 		FRAMEWORK DESTINATION "${MYGUI_FRAMEWORK_PATH}" CONFIGURATIONS Release None ""
 	)
 	install(TARGETS ${TARGETNAME}
-		RUNTIME DESTINATION "bin${MYGUI_RELWDBG_PATH}" CONFIGURATIONS RelWithDebInfo
-		LIBRARY DESTINATION "lib${MYGUI_LIB_RELWDBG_PATH}${SUFFIX}" CONFIGURATIONS RelWithDebInfo
-		ARCHIVE DESTINATION "lib${MYGUI_LIB_RELWDBG_PATH}${SUFFIX}" CONFIGURATIONS RelWithDebInfo
+		RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}${MYGUI_RELWDBG_PATH}" CONFIGURATIONS RelWithDebInfo
+		LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}${MYGUI_LIB_RELWDBG_PATH}${SUFFIX}" CONFIGURATIONS RelWithDebInfo
+		ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}${MYGUI_LIB_RELWDBG_PATH}${SUFFIX}" CONFIGURATIONS RelWithDebInfo
 		FRAMEWORK DESTINATION "${MYGUI_FRAMEWORK_PATH}" CONFIGURATIONS RelWithDebInfo
 	)
 	install(TARGETS ${TARGETNAME}
 		RUNTIME DESTINATION "bin${MYGUI_MINSIZE_PATH}" CONFIGURATIONS MinSizeRel
-		LIBRARY DESTINATION "lib${MYGUI_LIB_MINSIZE_PATH}${SUFFIX}" CONFIGURATIONS MinSizeRel
-		ARCHIVE DESTINATION "lib${MYGUI_LIB_MINSIZE_PATH}${SUFFIX}" CONFIGURATIONS MinSizeRel
+		LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}${MYGUI_LIB_MINSIZE_PATH}${SUFFIX}" CONFIGURATIONS MinSizeRel
+		ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}${MYGUI_LIB_MINSIZE_PATH}${SUFFIX}" CONFIGURATIONS MinSizeRel
 		FRAMEWORK DESTINATION "${MYGUI_FRAMEWORK_PATH}" CONFIGURATIONS MinSizeRel
 	)
 	install(TARGETS ${TARGETNAME}
 		RUNTIME DESTINATION "bin${MYGUI_DEBUG_PATH}" CONFIGURATIONS Debug
-		LIBRARY DESTINATION "lib${MYGUI_LIB_DEBUG_PATH}${SUFFIX}" CONFIGURATIONS Debug
-		ARCHIVE DESTINATION "lib${MYGUI_LIB_DEBUG_PATH}${SUFFIX}" CONFIGURATIONS Debug
+		LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}${MYGUI_LIB_DEBUG_PATH}${SUFFIX}" CONFIGURATIONS Debug
+		ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}${MYGUI_LIB_DEBUG_PATH}${SUFFIX}" CONFIGURATIONS Debug
 		FRAMEWORK DESTINATION "${MYGUI_FRAMEWORK_PATH}" CONFIGURATIONS Debug
 	)
 endfunction(mygui_install_target)
@@ -61,9 +79,9 @@ endfunction(mygui_install_target)
 # setup common target settings
 function(mygui_config_common TARGETNAME)
 	set_target_properties(${TARGETNAME} PROPERTIES
-		ARCHIVE_OUTPUT_DIRECTORY ${MYGUI_BINARY_DIR}/lib
-		LIBRARY_OUTPUT_DIRECTORY ${MYGUI_BINARY_DIR}/lib
-		RUNTIME_OUTPUT_DIRECTORY ${MYGUI_BINARY_DIR}/bin
+		ARCHIVE_OUTPUT_DIRECTORY ${MYGUI_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}
+		LIBRARY_OUTPUT_DIRECTORY ${MYGUI_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}
+		RUNTIME_OUTPUT_DIRECTORY ${MYGUI_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}
 	)
 endfunction(mygui_config_common)
 
@@ -73,102 +91,71 @@ function(mygui_app PROJECTNAME SOLUTIONFOLDER)
 		.
 		${MYGUI_SOURCE_DIR}/Common
 		${MYGUI_SOURCE_DIR}/MyGUIEngine/include
+		${MYGUI_SOURCE_DIR}/Common/Input/SDL
 	)
 	# define the sources
 	include(${PROJECTNAME}.list)
 
+	include_directories(${SDL2_INCLUDE_DIRS} ${SDL2_INCLUDE_DIRS}/..)
+	link_directories(${SDL2_LIB_DIR})
+
 	# Set up dependencies
+	mygui_add_base_manager_include(${MYGUI_RENDERSYSTEM})
+	mygui_set_platform_name(${MYGUI_RENDERSYSTEM})
+	include_directories(
+		${MYGUI_SOURCE_DIR}/Platforms/${MYGUI_PLATFORM_NAME}/${MYGUI_PLATFORM_NAME}Platform/include
+	)
 	if(MYGUI_RENDERSYSTEM EQUAL 1)
-		include_directories(../../Common/Base/Dummy)
 		add_definitions("-DMYGUI_DUMMY_PLATFORM")
-		include_directories(
-			${MYGUI_SOURCE_DIR}/Platforms/Dummy/DummyPlatform/include
-		)
 	elseif(MYGUI_RENDERSYSTEM EQUAL 3)
-		include_directories(../../Common/Base/Ogre)
 		add_definitions("-DMYGUI_OGRE_PLATFORM")
 		include_directories(
-			${MYGUI_SOURCE_DIR}/Platforms/Ogre/OgrePlatform/include
 			${OGRE_INCLUDE_DIR}
 		)
 		link_directories(${OGRE_LIB_DIR})
 	elseif(MYGUI_RENDERSYSTEM EQUAL 4)
-		include_directories(../../Common/Base/OpenGL)
 		add_definitions("-DMYGUI_OPENGL_PLATFORM")
 		include_directories(
-			${MYGUI_SOURCE_DIR}/Platforms/OpenGL/OpenGLPlatform/include
 			${OPENGL_INCLUDE_DIR}
-			${SDL2_INCLUDE_DIRS}
 			${SDL2_IMAGE_INCLUDE_DIRS}
 		)
 		link_directories(
 			${OPENGL_LIB_DIR}
-			${SDL2_LIB_DIR}
 			${SDL2_IMAGE_LIB_DIR}
 		)
 
 	elseif(MYGUI_RENDERSYSTEM EQUAL 5)
-		include_directories(../../Common/Base/DirectX)
 		add_definitions("-DMYGUI_DIRECTX_PLATFORM")
 		include_directories(
-			${MYGUI_SOURCE_DIR}/Platforms/DirectX/DirectXPlatform/include
 			${DirectX_INCLUDE_DIR}
 		)
 		link_directories(${DIRECTX_LIB_DIR})
 	elseif(MYGUI_RENDERSYSTEM EQUAL 6)
-		include_directories(../../Common/Base/DirectX11)
 		add_definitions("-DMYGUI_DIRECTX11_PLATFORM")
 		include_directories(
-			${MYGUI_SOURCE_DIR}/Platforms/DirectX11/DirectX11Platform/include
 			${DirectX_INCLUDE_DIR}
 		)
 		link_directories(${DIRECTX_LIB_DIR})
 	elseif(MYGUI_RENDERSYSTEM EQUAL 7)
-		include_directories(../../Common/Base/OpenGL3)
 		add_definitions("-DMYGUI_OPENGL3_PLATFORM")
 		include_directories(
-				${MYGUI_SOURCE_DIR}/Platforms/OpenGL3/OpenGL3Platform/include
-				${OPENGL_INCLUDE_DIR}
-				${SDL2_INCLUDE_DIRS}
-				${SDL2_IMAGE_INCLUDE_DIRS}
+			${OPENGL_INCLUDE_DIR}
+			${SDL2_IMAGE_INCLUDE_DIRS}
 		)
 		link_directories(
-				${OPENGL_LIB_DIR}
-				${SDL2_LIB_DIR}
-				${SDL2_IMAGE_LIB_DIR}
+			${OPENGL_LIB_DIR}
+			${SDL2_IMAGE_LIB_DIR}
 		)
 	elseif(MYGUI_RENDERSYSTEM EQUAL 8)
-		include_directories(../../Common/Base/OpenGLES)
 		add_definitions("-DMYGUI_OPENGLES_PLATFORM")
 		include_directories(
-				${MYGUI_SOURCE_DIR}/Platforms/OpenGLES/OpenGLESPlatform/include
-				${OPENGL_INCLUDE_DIR}
-				${SDL2_INCLUDE_DIRS}
-				${SDL2_IMAGE_INCLUDE_DIRS}
+			${OPENGL_INCLUDE_DIR}
+			${SDL2_IMAGE_INCLUDE_DIRS}
 		)
 		link_directories(
-				${OPENGL_LIB_DIR}
-				${SDL2_LIB_DIR}
-				${SDL2_IMAGE_LIB_DIR}
+			${OPENGL_LIB_DIR}
+			${SDL2_IMAGE_LIB_DIR}
 		)
-	endif()
-
-	if(MYGUI_SAMPLES_INPUT EQUAL 1)
-		add_definitions("-DMYGUI_SAMPLES_INPUT_OIS")
-		include_directories(../../Common/Input/OIS)
-		include_directories(${OIS_INCLUDE_DIRS})
-	elseif(MYGUI_SAMPLES_INPUT EQUAL 2)
-		add_definitions("-DMYGUI_SAMPLES_INPUT_WIN32")
-		include_directories(../../Common/Input/Win32)
-	elseif(MYGUI_SAMPLES_INPUT EQUAL 3)
-		add_definitions("-DMYGUI_SAMPLES_INPUT_WIN32_OIS")
-		include_directories(../../Common/Input/Win32_OIS)
-		include_directories(${OIS_INCLUDE_DIRS})
-	elseif(MYGUI_SAMPLES_INPUT EQUAL 4)
-		add_definitions("-DMYGUI_SAMPLES_INPUT_SDL2")
-		include_directories(../../Common/Input/SDL)
-		include_directories(${SDL2_INCLUDE_DIRS})
-		include_directories(${SDL2_IMAGE_INCLUDE_DIRS})
 	endif()
 
 	# setup demo target
@@ -192,30 +179,20 @@ function(mygui_app PROJECTNAME SOLUTIONFOLDER)
 	# link Common, Platform and MyGUIEngine
 	target_link_libraries(${PROJECTNAME}
 		Common
+		${SDL2_LIBRARIES}
 	)
-	if(MYGUI_RENDERSYSTEM EQUAL 3)
-		add_dependencies(${PROJECTNAME} MyGUI.OgrePlatform)
-		target_link_libraries(${PROJECTNAME} MyGUI.OgrePlatform)
-	elseif(MYGUI_RENDERSYSTEM EQUAL 4)
-		add_dependencies(${PROJECTNAME} MyGUI.OpenGLPlatform)
-		target_link_libraries(${PROJECTNAME} MyGUI.OpenGLPlatform)
 
-		target_link_libraries(${PROJECTNAME} ${SDL2_LIBRARIES})
+	mygui_set_platform_name(${MYGUI_RENDERSYSTEM})
+	add_dependencies(${PROJECTNAME} MyGUI.${MYGUI_PLATFORM_NAME}Platform)
+	target_link_libraries(${PROJECTNAME} MyGUI.${MYGUI_PLATFORM_NAME}Platform)
+	if(MYGUI_RENDERSYSTEM EQUAL 1)
+	elseif(MYGUI_RENDERSYSTEM EQUAL 3)
+	elseif(MYGUI_RENDERSYSTEM EQUAL 4)
 		target_link_libraries(${PROJECTNAME} ${SDL2_IMAGE_LIBRARIES})
 	elseif(MYGUI_RENDERSYSTEM EQUAL 5)
-		add_dependencies(${PROJECTNAME} MyGUI.DirectXPlatform)
-		target_link_libraries(${PROJECTNAME} MyGUI.DirectXPlatform)
 	elseif(MYGUI_RENDERSYSTEM EQUAL 7)
-		add_dependencies(${PROJECTNAME} MyGUI.OpenGL3Platform)
-		target_link_libraries(${PROJECTNAME} MyGUI.OpenGL3Platform)
-
-		target_link_libraries(${PROJECTNAME} ${SDL2_LIBRARIES})
 		target_link_libraries(${PROJECTNAME} ${SDL2_IMAGE_LIBRARIES})
 	elseif(MYGUI_RENDERSYSTEM EQUAL 8)
-		add_dependencies(${PROJECTNAME} MyGUI.OpenGLESPlatform)
-		target_link_libraries(${PROJECTNAME} MyGUI.OpenGLESPlatform)
-
-		target_link_libraries(${PROJECTNAME} ${SDL2_LIBRARIES})
 		target_link_libraries(${PROJECTNAME} ${SDL2_IMAGE_LIBRARIES})
 	endif()
 	target_link_libraries(${PROJECTNAME}
@@ -247,66 +224,56 @@ function(mygui_dll PROJECTNAME SOLUTIONFOLDER)
 	# define the sources
 	include(${PROJECTNAME}.list)
 
+	include_directories(${SDL2_INCLUDE_DIRS} ${SDL2_INCLUDE_DIRS}/..)
+	link_directories(${SDL2_LIB_DIR})
+
 	# Set up dependencies
+	mygui_add_base_manager_include(${MYGUI_RENDERSYSTEM})
+	mygui_set_platform_name(${MYGUI_RENDERSYSTEM})
+	include_directories(
+		${MYGUI_SOURCE_DIR}/Platforms/${MYGUI_PLATFORM_NAME}/${MYGUI_PLATFORM_NAME}Platform/include
+	)
 	if(MYGUI_RENDERSYSTEM EQUAL 1)
-		include_directories(../../Common/Base/Dummy)
 		add_definitions("-DMYGUI_DUMMY_PLATFORM")
-		include_directories(
-			${MYGUI_SOURCE_DIR}/Platforms/Dummy/DummyPlatform/include
-		)
 	elseif(MYGUI_RENDERSYSTEM EQUAL 3)
-		include_directories(../../Common/Base/Ogre)
 		add_definitions("-DMYGUI_OGRE_PLATFORM")
 		include_directories(
-			${MYGUI_SOURCE_DIR}/Platforms/Ogre/OgrePlatform/include
 			${OGRE_INCLUDE_DIR}
 		)
 		link_directories(${OGRE_LIB_DIR})
 	elseif(MYGUI_RENDERSYSTEM EQUAL 4)
-		include_directories(../../Common/Base/OpenGL)
 		add_definitions("-DMYGUI_OPENGL_PLATFORM")
 		include_directories(
-			${MYGUI_SOURCE_DIR}/Platforms/OpenGL/OpenGLPlatform/include
 			${OPENGL_INCLUDE_DIR}
-			${SDL2_INCLUDE_DIRS}
 			${SDL2_IMAGE_INCLUDE_DIRS}
 		)
 		link_directories(
 			${OPENGL_LIB_DIR}
-			${SDL2_LIB_DIR}
 			${SDL2_IMAGE_LIB_DIR}
 		)
 	elseif(MYGUI_RENDERSYSTEM EQUAL 5)
-		include_directories(../../Common/Base/DirectX)
 		add_definitions("-DMYGUI_DIRECTX_PLATFORM")
 		include_directories(
-			${MYGUI_SOURCE_DIR}/Platforms/DirectX/DirectXPlatform/include
 			${DirectX_INCLUDE_DIR}
 		)
 		link_directories(
 			${DIRECTX_LIB_DIR}
 		)
 	elseif(MYGUI_RENDERSYSTEM EQUAL 6)
-		include_directories(../../Common/Base/DirectX11)
 		add_definitions("-DMYGUI_DIRECTX11_PLATFORM")
 		include_directories(
-			${MYGUI_SOURCE_DIR}/Platforms/DirectX11/DirectX11Platform/include
 			${DirectX_INCLUDE_DIR}
 		)
 		link_directories(${DIRECTX_LIB_DIR})
 	elseif(MYGUI_RENDERSYSTEM EQUAL 7)
-		include_directories(../../Common/Base/OpenGL3)
 		add_definitions("-DMYGUI_OPENGL3_PLATFORM")
 		include_directories(
-			${MYGUI_SOURCE_DIR}/Platforms/OpenGL3/OpenGL3Platform/include
 			${OPENGL_INCLUDE_DIR}
 		)
 		link_directories(${OPENGL_LIB_DIR})
 	elseif(MYGUI_RENDERSYSTEM EQUAL 8)
-		include_directories(../../Common/Base/OpenGLES)
 		add_definitions("-DMYGUI_OPENGLES_PLATFORM")
 		include_directories(
-				${MYGUI_SOURCE_DIR}/Platforms/OpenGLES/OpenGLESPlatform/include
 				${OPENGL_INCLUDE_DIR}
 		)
 		link_directories(${OPENGL_LIB_DIR})
@@ -327,31 +294,21 @@ function(mygui_dll PROJECTNAME SOLUTIONFOLDER)
 
 	target_link_libraries(${PROJECTNAME}
 		Common
+		${SDL2_LIBRARIES}
 	)
 
-	if(MYGUI_RENDERSYSTEM EQUAL 3)
-		add_dependencies(${PROJECTNAME} MyGUI.OgrePlatform)
-		target_link_libraries(${PROJECTNAME} MyGUI.OgrePlatform)
+	mygui_set_platform_name(${MYGUI_RENDERSYSTEM})
+	add_dependencies(${PROJECTNAME} MyGUI.${MYGUI_PLATFORM_NAME}Platform)
+	target_link_libraries(${PROJECTNAME} MyGUI.${MYGUI_PLATFORM_NAME}Platform)
+	if(MYGUI_RENDERSYSTEM EQUAL 1)
+	elseif(MYGUI_RENDERSYSTEM EQUAL 3)
 	elseif(MYGUI_RENDERSYSTEM EQUAL 4)
-		add_dependencies(${PROJECTNAME} MyGUI.OpenGLPlatform)
-		target_link_libraries(${PROJECTNAME} MyGUI.OpenGLPlatform)
-
-		target_link_libraries(${PROJECTNAME} ${SDL2_LIBRARIES})
 		target_link_libraries(${PROJECTNAME} ${SDL2_IMAGE_LIBRARIES})
 	elseif(MYGUI_RENDERSYSTEM EQUAL 5)
-		add_dependencies(${PROJECTNAME} MyGUI.DirectXPlatform)
-		target_link_libraries(${PROJECTNAME} MyGUI.DirectXPlatform)
+	elseif(MYGUI_RENDERSYSTEM EQUAL 6)
 	elseif(MYGUI_RENDERSYSTEM EQUAL 7)
-		add_dependencies(${PROJECTNAME} MyGUI.OpenGL3Platform)
-		target_link_libraries(${PROJECTNAME} MyGUI.OpenGL3Platform)
-
-		target_link_libraries(${PROJECTNAME} ${SDL2_LIBRARIES})
 		target_link_libraries(${PROJECTNAME} ${SDL2_IMAGE_LIBRARIES})
 	elseif(MYGUI_RENDERSYSTEM EQUAL 8)
-		add_dependencies(${PROJECTNAME} MyGUI.OpenGLESPlatform)
-		target_link_libraries(${PROJECTNAME} MyGUI.OpenGLESPlatform)
-
-		target_link_libraries(${PROJECTNAME} ${SDL2_LIBRARIES})
 		target_link_libraries(${PROJECTNAME} ${SDL2_IMAGE_LIBRARIES})
 	endif()
 
@@ -425,11 +382,11 @@ endfunction(mygui_tool_dll)
 function(mygui_install_app PROJECTNAME)
 	if (MYGUI_INSTALL_PDB)
 		# install debug pdb files
-		install(FILES ${MYGUI_BINARY_DIR}/bin${MYGUI_DEBUG_PATH}/${PROJECTNAME}.pdb
+		install(FILES ${MYGUI_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}${MYGUI_DEBUG_PATH}/${PROJECTNAME}.pdb
 			DESTINATION bin${MYGUI_DEBUG_PATH}
 			CONFIGURATIONS Debug
 		)
-		install(FILES ${MYGUI_BINARY_DIR}/bin${MYGUI_RELWDBG_PATH}/${PROJECTNAME}.pdb
+		install(FILES ${MYGUI_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}${MYGUI_RELWDBG_PATH}/${PROJECTNAME}.pdb
 			DESTINATION bin${MYGUI_RELWDBG_PATH}
 			CONFIGURATIONS RelWithDebInfo
 		)
@@ -492,20 +449,20 @@ function(mygui_config_lib PROJECTNAME)
 	if (MYGUI_INSTALL_PDB)
 		# install debug pdb files
 		if (MYGUI_STATIC)
-			install(FILES ${MYGUI_BINARY_DIR}/lib${MYGUI_LIB_DEBUG_PATH}/${PROJECTNAME}Static_d.pdb
+			install(FILES ${MYGUI_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}${MYGUI_LIB_DEBUG_PATH}/${PROJECTNAME}Static_d.pdb
 				DESTINATION lib${MYGUI_LIB_DEBUG_PATH}
 				CONFIGURATIONS Debug
 			)
-			install(FILES ${MYGUI_BINARY_DIR}/lib${MYGUI_LIB_RELWDBG_PATH}/${PROJECTNAME}Static.pdb
+			install(FILES ${MYGUI_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}${MYGUI_LIB_RELWDBG_PATH}/${PROJECTNAME}Static.pdb
 				DESTINATION lib${MYGUI_LIB_RELWDBG_PATH}
 				CONFIGURATIONS RelWithDebInfo
 			)
 		else ()
-			install(FILES ${MYGUI_BINARY_DIR}/bin${MYGUI_DEBUG_PATH}/${PROJECTNAME}_d.pdb
+			install(FILES ${MYGUI_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}${MYGUI_DEBUG_PATH}/${PROJECTNAME}_d.pdb
 				DESTINATION bin${MYGUI_DEBUG_PATH}
 				CONFIGURATIONS Debug
 			)
-			install(FILES ${MYGUI_BINARY_DIR}/bin${MYGUI_RELWDBG_PATH}/${PROJECTNAME}.pdb
+			install(FILES ${MYGUI_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}${MYGUI_RELWDBG_PATH}/${PROJECTNAME}.pdb
 				DESTINATION bin${MYGUI_RELWDBG_PATH}
 				CONFIGURATIONS RelWithDebInfo
 			)
@@ -521,7 +478,7 @@ function(mygui_config_sample PROJECTNAME)
 	# set install RPATH for Unix systems
 	if (UNIX AND MYGUI_FULL_RPATH)
 		set_property(TARGET ${PROJECTNAME} APPEND PROPERTY
-			INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
+			INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR})
 		set_property(TARGET ${PROJECTNAME} PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 	endif ()
 endfunction(mygui_config_sample)

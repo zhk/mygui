@@ -23,33 +23,32 @@ namespace MyGUI
 	public:
 		OpenGL3RenderManager();
 
-		void initialise(OpenGL3ImageLoader* _loader = 0);
+		void initialise(OpenGL3ImageLoader* _loader = nullptr);
 		void shutdown();
 
 		static OpenGL3RenderManager& getInstance();
 		static OpenGL3RenderManager* getInstancePtr();
 
-		/** @see OpenGL3RenderManager::getViewSize */
+		/** @see RenderManager::getViewSize */
 		virtual const IntSize& getViewSize() const;
 
-		/** @see OpenGL3RenderManager::getVertexFormat */
+		/** @see RenderManager::getVertexFormat */
 		virtual VertexColourType getVertexFormat();
 
-		/** @see OpenGL3RenderManager::isFormatSupported */
+		/** @see RenderManager::isFormatSupported */
 		virtual bool isFormatSupported(PixelFormat _format, TextureUsage _usage);
 
-		/** @see OpenGL3RenderManager::createVertexBuffer */
+		/** @see RenderManager::createVertexBuffer */
 		virtual IVertexBuffer* createVertexBuffer();
-		/** @see OpenGL3RenderManager::destroyVertexBuffer */
+		/** @see RenderManager::destroyVertexBuffer */
 		virtual void destroyVertexBuffer(IVertexBuffer* _buffer);
 
-		/** @see OpenGL3RenderManager::createTexture */
+		/** @see RenderManager::createTexture */
 		virtual ITexture* createTexture(const std::string& _name);
-		/** @see OpenGL3RenderManager::destroyTexture */
+		/** @see RenderManager::destroyTexture */
 		virtual void destroyTexture(ITexture* _texture);
-		/** @see OpenGL3RenderManager::getTexture */
+		/** @see RenderManager::getTexture */
 		virtual ITexture* getTexture(const std::string& _name);
-
 
 		/** @see IRenderTarget::begin */
 		virtual void begin();
@@ -60,14 +59,16 @@ namespace MyGUI
 		/** @see IRenderTarget::getInfo */
 		virtual const RenderTargetInfo& getInfo();
 
-    /* for use with RTT, flips Y coordinate when rendering */
-    void doRenderRTT(IVertexBuffer* _buffer, ITexture* _texture, size_t _count); 
+		/** @see RenderManager::setViewSize */
+		void setViewSize(int _width, int _height) override;
+
+		/* for use with RTT, flips Y coordinate when rendering */
+		void doRenderRtt(IVertexBuffer* _buffer, ITexture* _texture, size_t _count);
 
 	/*internal:*/
 		void drawOneFrame();
-		void setViewSize(int _width, int _height);
 		bool isPixelBufferObjectSupported() const;
-    unsigned int createShaderProgram(void);
+		unsigned int createShaderProgram(void);
 
 	private:
 		void destroyAllResources();
@@ -77,17 +78,17 @@ namespace MyGUI
 		bool mUpdate;
 		VertexColourType mVertexFormat;
 		RenderTargetInfo mInfo;
-    unsigned int mProgramID;
-    unsigned int mReferenceCount; // for nested rendering
-    int mYScaleUniformLocation;
+		unsigned int mProgramID;
+		unsigned int mReferenceCount; // for nested rendering
+		int mYScaleUniformLocation;
 
 		typedef std::map<std::string, ITexture*> MapTexture;
 		MapTexture mTextures;
 		OpenGL3ImageLoader* mImageLoader;
 		bool mPboIsSupported;
-        
+
 		bool mIsInitialise;
-  };
+	};
 
 } // namespace MyGUI
 

@@ -8,6 +8,7 @@
 cmake_minimum_required(VERSION 2.6)
 set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS TRUE)
 cmake_policy(SET CMP0003 NEW)
+cmake_policy(SET CMP0011 NEW)
 
 project(MYGUI)
 
@@ -25,13 +26,7 @@ include(Utils)
 set(MYGUI_TEMPLATES_DIR "${MYGUI_SOURCE_DIR}/CMake/Templates")
 set(MYGUI_WORK_DIR ${MYGUI_BINARY_DIR})
 
-# detect and enable C++11 if available
-find_package (CXX11)
-if (CXX11_FOUND)
-	SET(CMAKE_CXX_STANDARD 11)
-else ()
-	add_definitions(-DMYGUI_NO_CXX11)
-endif ()
+SET(CMAKE_CXX_STANDARD 11)
 
 #####################################################################
 # Set up the basic build environment
@@ -83,19 +78,13 @@ if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_C
 	endif()
 endif ()
 
-# determine system endianess
-include(TestBigEndian)
-test_big_endian(MYGUI_TEST_BIG_ENDIAN)
-
-# Add MyGUIEngine include path
-
 # definitions for samples
 set(MYGUI_LIBRARIES MyGUIEngine)
 
 # Specify build paths
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${MYGUI_BINARY_DIR}/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${MYGUI_BINARY_DIR}/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${MYGUI_BINARY_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${MYGUI_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${MYGUI_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${MYGUI_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
 if (WIN32 OR APPLE)
 	if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 		if (UNIX)
@@ -115,9 +104,6 @@ endif(WIN32 OR APPLE)
 ######################################################################
 
 if (EMSCRIPTEN)
-	set(MYGUI_RENDERSYSTEM 8 CACHE STRING "")
-	set(MYGUI_SAMPLES_INPUT 4 CACHE STRING "")
-	set(MYGUI_USE_FREETYPE False CACHE BOOL "")
 	set(MYGUI_STATIC True CACHE BOOL "")
 	set(MYGUI_DISABLE_PLUGINS True CACHE BOOL "")
 	set(MYGUI_USE_SYSTEM_GLEW True CACHE BOOL "")
@@ -173,22 +159,6 @@ option(MYGUI_STANDALONE_BUILD "Generate build files that do not reference CMake 
 MARK_AS_ADVANCED(MYGUI_STANDALONE_BUILD)
 option(MYGUI_GENERATE_LIST_FILES_FROM_VSPROJECT "Generate .list files from visual studio project files" FALSE)
 
-if (WIN32)
-	set(MYGUI_SAMPLES_INPUT 2 CACHE STRING
-	"Specify the Input Manager for samples. Possible values:
-	  1 - OIS
-	  2 - Win32
-	  3 - Win32 (Mouse) + OIS (Keyboard)
-	  4 - SDL2"
-	)
-else()
-	set(MYGUI_SAMPLES_INPUT 1)
-endif()
-
-if(MYGUI_RENDERSYSTEM EQUAL 4 OR MYGUI_RENDERSYSTEM EQUAL 7 OR MYGUI_RENDERSYSTEM EQUAL 8)
-	set(MYGUI_SAMPLES_INPUT 4)
-endif()
-
 if (MSVC)
 	option(MYGUI_USE_PROJECT_FOLDERS "Use Visual Studio solution folders for projects." FALSE)
 endif ()
@@ -229,21 +199,23 @@ if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_C
 			# to avoid warnings from OGRE
 			ignore_warnings(${OGRE_INCLUDE_DIR})
 		endif ()
-		if (MYGUI_SAMPLES_INPUT EQUAL 1 OR MYGUI_SAMPLES_INPUT EQUAL 3)
-			# to avoid warnings from OIS
-			ignore_warnings(${OIS_INCLUDE_DIR})
+
+		if (MYGUI_BUILD_DEMOS OR MYGUI_BUILD_TOOLS OR MYGUI_BUILD_UNITTESTS OR MYGUI_BUILD_TEST_APP)
+			ignore_warnings(${SDL2_INCLUDE_DIRS} ${SDL2_INCLUDE_DIRS}/..)
 		endif ()
 
 		if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
                         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Weverything")
+                        # useful, TODO
+                        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-inconsistent-missing-override")
                         # might be useful
-                        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-warning-option -Wno-sign-conversion -Wno-conversion -Wno-documentation -Wno-old-style-cast")
+                        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-exceptions -Wno-documentation-unknown-command -Wno-unknown-warning-option -Wno-sign-conversion -Wno-conversion -Wno-documentation -Wno-old-style-cast")
                         # not useful
-                        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++98-compat -Wno-c++11-extensions -Wno-float-equal -Wno-padded -Wno-padded -Wno-weak-vtables -Wno-duplicate-enum -Wno-exit-time-destructors -Wno-unused-parameter -Wno-global-constructors")
+                        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-missing-prototypes -Wno-reorder -Wno-undefined-var-template -Wno-c++98-compat-pedantic -Wno-c++98-compat -Wno-c++11-extensions -Wno-float-equal -Wno-padded -Wno-padded -Wno-weak-vtables -Wno-duplicate-enum -Wno-exit-time-destructors -Wno-unused-parameter -Wno-global-constructors")
 		else ()
 			# very interesting option, but way too many warnings
 			#add_definitions(-Weffc++)
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated -Wall  -Winit-self -Woverloaded-virtual -Wcast-qual -Wwrite-strings -Wextra -Wno-unused-parameter")
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated -Wall -Wno-reorder -Winit-self -Woverloaded-virtual -Wcast-qual -Wwrite-strings -Wextra -Wno-unused-parameter")
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic")
 			if (NOT CMAKE_CXX_COMPILER_ID MATCHES "Intel")
 				set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wctor-dtor-privacy")
@@ -254,6 +226,25 @@ if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_C
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wshadow")
 		endif ()
 	endif ()
+endif ()
+
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+	# usage:
+	# UBSAN_OPTIONS=print_stacktrace=1,suppressions=sanitizers/UBSanitizer.supp <command>
+	option(MYGUI_UB_SANITIZER "Compile with undefined behaviour sanitizer" FALSE)
+	if (MYGUI_UB_SANITIZER)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -fno-optimize-sibling-calls")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-sanitize-recover=undefined")
+	endif()
+
+	# usage:
+	# ASAN_OPTIONS=alloc_dealloc_mismatch=0,check_initialization_order=1,detect_stack_use_after_return=1 LSAN_OPTIONS=suppressions=sanitizers/LeaksSanitizer.supp <command>
+	# alloc_dealloc_mismatch is here due to issues with Ogre and no clear way to suppress the issue
+	option(MYGUI_ADDRESS_SANITIZER "Compile with address sanitizer" FALSE)
+	if (MYGUI_ADDRESS_SANITIZER)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -fno-optimize-sibling-calls")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fsanitize-address-use-after-scope")
+	endif()
 endif ()
 
 if (MSVC)
@@ -356,10 +347,3 @@ add_subdirectory(CMake)
 
 # Provide CPack packaging target
 include(Packaging)
-
-# copy dlls required by SDL2 and SDL2_image
-if(WIN32)
-    if(MYGUI_RENDERSYSTEM EQUAL 4)
-
-    endif(MYGUI_RENDERSYSTEM EQUAL 4)
-endif(WIN32)
